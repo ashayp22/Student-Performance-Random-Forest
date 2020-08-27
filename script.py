@@ -26,6 +26,7 @@ import csv
 inputs = []
 
 remove = ['nationality', 'placeofbirth', 'sectionid', 'topic', 'semester', 'relation']
+convert = ['raisedhands', 'visitedresources', 'announcementsview', 'discussion']
 
 with open('api-edu-data.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
@@ -34,14 +35,29 @@ with open('api-edu-data.csv') as csv_file:
     for row in csv_reader:
         if line_count == 0:
             keys = [x.lower() for x in row]
+            print(keys)
         else:
             new_dict = {}
             c = 0
             for key in keys:
-                if key not in remove:
-                    new_dict[key] = row[c]
+                if key not in remove: #should be added to the dict
+                    if key in convert: #needs to be convereted from numerical data to categorical data
+                        val = int(row[c])
+                        m = ""
+                        if val <= 33:
+                            m = "L"
+                        elif val <= 66:
+                            m = "M"
+                        else:
+                            m = "H"
+                        new_dict[key] = m
+                    else:
+                        new_dict[key] = row[c]
                 c += 1
-            inputs.append((new_dict, new_dict['class'] == "H"))
+
+            grade = new_dict['class'] == "H"
+            new_dict.pop('class')
+            inputs.append((new_dict, grade))
         line_count += 1
 
 print(inputs)
@@ -162,8 +178,22 @@ def forest_classify(trees, input):
     return vote_counts.most_common(1)[0][0]
 
 
-data_1 = {'gender': 'M', 'stageid': 'MiddleSchool', 'gradeid': 'G-11', 'raisedhands': '50', 'visitedresources': '88', 'announcementsview': '30', 'discussion': '80', 'parentansweringsurvey': 'Yes', 'parentschoolsatisfaction': 'Good', 'studentabsencedays': 'Under-7'}
-data_2 = {}
+data_1 = {'gender': 'M', 'stageid': 'MiddleSchool', 'raisedhands': 'L', 'visitedresources': 'L', 'announcementsview': 'L', 'discussion': 'L', 'parentansweringsurvey': 'Yes', 'parentschoolsatisfaction': 'Good', 'studentabsencedays': 'Under-7'}
+data_2 = {'visitedresources': 'H', 'announcementsview': 'H', 'discussion': 'H', 'parentansweringsurvey': 'Yes', 'parentschoolsatisfaction': 'Good', 'studentabsencedays': 'Under-7'}
 
-all_trees = [build_tree_id3(inputs) for _ in range(10)]
+
+all_trees = [build_tree_id3(random.sample(inputs, 100)) for _ in range(50)]
+
 print(forest_classify(all_trees, data_1))
+print(forest_classify(all_trees, data_2))
+
+good = 0
+total = 0
+
+for i in inputs:
+    c = forest_classify(all_trees, i[0])
+    if c == i[1]:
+        good += 1
+    total += 1
+
+print(good / total)
