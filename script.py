@@ -4,24 +4,6 @@ from functools import *
 import random
 import csv
 
-#data
-
-# inputs = [
-#     ({'level': 'Senior', 'lang': 'Java', 'tweets': 'no', 'phd': 'no'}, False),
-#     ({'level': 'Senior', 'lang': 'Java', 'tweets': 'no', 'phd': 'yes'}, False),
-#     ({'level': 'Mid', 'lang': 'Python', 'tweets': 'no', 'phd': 'no'}, True),
-#     ({'level': 'Junior', 'lang': 'Python', 'tweets': 'no', 'phd': 'no'}, True),
-#     ({'level': 'Junior', 'lang': 'R', 'tweets': 'yes', 'phd': 'no'}, True),
-#     ({'level': 'Junior', 'lang': 'R', 'tweets': 'yes', 'phd': 'yes'}, False),
-#     ({'level': 'Mid', 'lang': 'R', 'tweets': 'yes', 'phd': 'yes'}, True),
-#     ({'level': 'Senior', 'lang': 'Python', 'tweets': 'no', 'phd': 'no'}, False),
-#     ({'level': 'Senior', 'lang': 'R', 'tweets': 'yes', 'phd': 'no'}, True),
-#     ({'level': 'Junior', 'lang': 'Python', 'tweets': 'yes', 'phd': 'no'}, True),
-#     ({'level': 'Senior', 'lang': 'Python', 'tweets': 'yes', 'phd': 'yes'}, True),
-#     ({'level': 'Mid', 'lang': 'Python', 'tweets': 'no', 'phd': 'yes'}, True),
-#     ({'level': 'Mid', 'lang': 'Java', 'tweets': 'yes', 'phd': 'no'}, True),
-#     ({'level': 'Junior', 'lang': 'Python', 'tweets': 'no', 'phd': 'yes'}, False),
-# ]
 
 inputs = []
 
@@ -97,9 +79,6 @@ def partition_entropy_by(inputs, attribute):
     partitions = partition_by(inputs, attribute)
     return partition_entropy(partitions.values())
 
-# for key in ['level', 'lang', 'tweets', 'phd']:
-#     print(key, partition_entropy_by(inputs, key))
-
 def classify(tree, input):
 
     if tree in [True, False]:
@@ -154,16 +133,6 @@ def build_tree_id3(inputs, num_split_candidates=2, split_candidates=None):
 
     return (best_attribute, subtrees)
 
-print("building tree--------------------------------")
-# tree = build_tree_id3(inputs)
-# tree2 = build_tree_id3(inputs)
-#
-# print(tree)
-# print(tree2)
-#
-#
-# print(classify(tree, {'level': 'Senior'}))
-# print(classify(tree2, {'level': 'Senior'}))
 
 '''
 To prevent overfitting, we can build random forests in which we
