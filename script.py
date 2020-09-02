@@ -4,10 +4,11 @@ from functools import *
 import random
 import csv
 
+#source: "Data Science from Scratch" by Joel Grus
 
 inputs = []
 
-remove = ['nationality', 'placeofbirth', 'sectionid', 'topic', 'semester', 'relation']
+remove = ['gender', 'nationality', 'placeofbirth', 'sectionid', 'topic', 'semester', 'relation', 'parentschoolsatisfaction']
 convert = ['raisedhands', 'visitedresources', 'announcementsview', 'discussion']
 
 with open('api-edu-data.csv') as csv_file:
@@ -42,33 +43,39 @@ with open('api-edu-data.csv') as csv_file:
             inputs.append((new_dict, grade))
         line_count += 1
 
-print(inputs)
+# print(inputs)
 
 #helper methods
 
+
 def entropy(class_probabilities):
+    """given the class probabilities as a list, we can compute the entropy of the dataset"""
     return sum(-p * math.log(p, 2)
                for p in class_probabilities
                if p)
 
 def class_probabilities(labels):
+    '''this returns our probabilites'''
     total_count = len(labels)
     return [count / total_count
             for count in Counter(labels).values()]
 
 def data_entropy(labeled_data):
+    '''labeled_data is inputted as (input, label), but we only care about the input'''
     labels = [label for _, label in labeled_data]
     probabilities = class_probabilities(labels)
     return entropy(probabilities)
 
 def partition_entropy(subsets):
-
+    '''finds the entropy from all of the partitions of data'''
     total_count = sum(len(subset) for subset in subsets)
 
     return sum( data_entropy(subset) * len(subset) / total_count
                 for subset in subsets)
 
 def partition_by(inputs, attribute):
+    """each input is a pair (attribute, label)
+    this returns a dict : attribute -> inputs"""
     groups = defaultdict(list)
     for input in inputs:
         key = input[0][attribute]
@@ -76,6 +83,7 @@ def partition_by(inputs, attribute):
     return groups
 
 def partition_entropy_by(inputs, attribute):
+    '''computes the entropy corresponding to the given partition'''
     partitions = partition_by(inputs, attribute)
     return partition_entropy(partitions.values())
 
@@ -94,7 +102,7 @@ def classify(tree, input):
     subtree = subtree_dict[subtree_key]
     return classify(subtree, input)
 
-def build_tree_id3(inputs, num_split_candidates=2, split_candidates=None):
+def build_tree(inputs, num_split_candidates=2, split_candidates=None):
 
     if split_candidates is None:
         split_candidates = inputs[0][0].keys()
@@ -126,7 +134,7 @@ def build_tree_id3(inputs, num_split_candidates=2, split_candidates=None):
 
     #recursively buld the subtrees
 
-    subtrees = { attribute_value : build_tree_id3(subset, split_candidates=new_candidates)
+    subtrees = { attribute_value : build_tree(subset, split_candidates=new_candidates)
                  for attribute_value, subset in partitions.items() }
 
     subtrees[None] = num_trues > num_falses #default case
@@ -144,25 +152,37 @@ inputs.
 def forest_classify(trees, input):
     votes = [classify(tree, input) for tree in trees]
     vote_counts = Counter(votes)
-    return vote_counts.most_common(1)[0][0]
+
+    if vote_counts.most_common(1)[0][0]:
+        return "High Performance"
+
+    return "Low Performance"
+
+testing = []
+
+for _ in range(15):
+    index = random.randint(0, len(inputs)-1)
+    testing.append(inputs.pop(index))
+
+all_trees = [build_tree(random.sample(inputs, 200)) for _ in range(50)]
+
+student_1 = {'stageid': 'MiddleSchool', 'raisedhands': 'L', 'visitedresources': 'M', 'announcementsview': 'L', 'discussion': 'L', 'parentansweringsurvey': 'Yes', 'studentabsencedays': 'Over-7'}
+student_2 = {'visitedresources': 'H', 'announcementsview': 'H', 'discussion': 'H', 'parentansweringsurvey': 'Yes', 'studentabsencedays': 'Under-7'}
 
 
-data_1 = {'gender': 'M', 'stageid': 'MiddleSchool', 'raisedhands': 'L', 'visitedresources': 'L', 'announcementsview': 'L', 'discussion': 'L', 'parentansweringsurvey': 'Yes', 'parentschoolsatisfaction': 'Good', 'studentabsencedays': 'Under-7'}
-data_2 = {'visitedresources': 'H', 'announcementsview': 'H', 'discussion': 'H', 'parentansweringsurvey': 'Yes', 'parentschoolsatisfaction': 'Good', 'studentabsencedays': 'Under-7'}
-
-
-all_trees = [build_tree_id3(random.sample(inputs, 100)) for _ in range(50)]
-
-print(forest_classify(all_trees, data_1))
-print(forest_classify(all_trees, data_2))
+print("Student 1 has " + forest_classify(all_trees, student_1))
+print("Student 2 has " + forest_classify(all_trees, student_2))
 
 good = 0
 total = 0
 
-for i in inputs:
+for i in testing:
     c = forest_classify(all_trees, i[0])
-    if c == i[1]:
+    i_class = "Low Performance"
+    if i[1]:
+        i_class = "High Performance"
+    if c == i_class:
         good += 1
     total += 1
 
-print(good / total)
+print("The random forest's accuracy is " + str(good / total * 100) + "%")
